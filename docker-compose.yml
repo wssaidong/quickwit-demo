@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  quickwit:
+    image: quickwit/quickwit:${QW_VERSION:-nightly}
+    container_name: quickwit-demo
+    ports:
+      - "7280:7280"
+    volumes:
+      - ./qwdata:/quickwit/qwdata
+      - ./stackoverflow-index-config.yaml:/quickwit/index-config.yaml:ro
+    command: run
+    environment:
+      - QW_DATA_DIR=/quickwit/qwdata
+      - RUST_LOG=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7280/api/v1/version"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # 可选：Kafka 用于实时数据摄入
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: quickwit-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+
+  # 可选：Grafana 用于可视化
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: quickwit-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - quickwit
+
+volumes:
+  kafka-data:
+  grafana-data:
