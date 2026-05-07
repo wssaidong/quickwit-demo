@@ -7,4 +7,5 @@ scrape_configs:
     static_configs:
       - targets:
           - 'quickwit:7280'
-    metrics_path: /api/v1/metrics
+    metrics_path: /metrics
+    scheme: http

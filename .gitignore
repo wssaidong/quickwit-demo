@@ -1,0 +1,13 @@
+# Data directories
+qwdata/
+*.log
+
+# Downloaded datasets
+stackoverflow.posts.transformed-10000.json
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
