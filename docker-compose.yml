@@ -22,7 +22,7 @@ services:
     image: timberio/vector:0.41.1-alpine
     container_name: quickwit-vector
     ports:
-      - "9000:9000"  # Vector API (for health/d metrics)
+      - "9000:9000"
     volumes:
       - ./vector.yml:/etc/vector/vector.yaml:ro
       - /var/log:/var/log:ro
@@ -31,42 +31,3 @@ services:
     depends_on:
       quickwit:
         condition: service_healthy
-
-  # Grafana with Infinity plugin for Quickwit index queries
-  grafana:
-    build:
-      context: .
-      dockerfile: grafana.Dockerfile
-    container_name: quickwit-grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
-    depends_on:
-      quickwit:
-        condition: service_healthy
-    restart: unless-stopped
-
-  # 可选：Prometheus 用于指标收集
-  prometheus:
-    image: prom/prometheus:v2.54.0
-    container_name: quickwit-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-    depends_on:
-      - quickwit
-
-volumes:
-  grafana-data:
-  prometheus-data:
