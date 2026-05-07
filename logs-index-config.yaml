@@ -1,0 +1,44 @@
+# Quickwit 日志索引配置
+# 用于接收 Vector 转发的日志数据
+#
+# 创建索引:
+#   curl -XPOST http://localhost:7280/api/v1/indexes \
+#     -H 'Content-Type: application/yaml' \
+#     --data-binary @logs-index-config.yaml
+
+version: 0.8
+
+index_id: logs
+
+doc_mapping:
+  field_mappings:
+    - name: timestamp
+      type: datetime
+      fast: true
+      input_formats:
+        - rfc3339
+        - unix
+      fast_precision: seconds
+    - name: title
+      type: text
+      tokenizer: default
+      stored: true
+    - name: body
+      type: text
+      tokenizer: default
+      stored: true
+    - name: level
+      type: text
+      tokenizer: raw
+      stored: true
+    - name: service
+      type: text
+      tokenizer: raw
+      stored: true
+  timestamp_field: timestamp
+
+search_settings:
+  default_search_fields: [title, body]
+
+indexing_settings:
+  commit_timeout_secs: 10

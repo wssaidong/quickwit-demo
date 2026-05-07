@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'quickwit'
+    static_configs:
+      - targets:
+          - 'quickwit:7280'
+    metrics_path: /api/v1/metrics

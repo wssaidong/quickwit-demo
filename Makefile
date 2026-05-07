@@ -1,4 +1,4 @@
-.PHONY: help install start stop restart logs clean index ingest search search-examples test version
+.PHONY: help install start stop restart logs clean index ingest search search-examples vector-up create-logs-index vector-logs test version demo
 
 # 默认目标
 help:
@@ -21,6 +21,11 @@ help:
 	@echo "  search         Run basic search example"
 	@echo "  search-examples Run all search examples"
 	@echo ""
+	@echo "Vector targets:"
+	@echo "  vector-up      Start Vector for log collection"
+	@echo "  create-logs-index Create the logs index for Vector data"
+	@echo "  vector-logs    Create logs index and run Vector demo"
+	@echo ""
 	@echo "Utility targets:"
 	@echo "  test           Test API endpoint"
 	@echo "  version        Check Quickwit version"
@@ -30,7 +35,7 @@ help:
 	@echo "  demo           Full demo: install + start + index + ingest + search"
 	@echo ""
 	@echo "Options:"
-	@echo "  QW_VERSION=n   Set Quickwit version (default: nightly)"
+	@echo "  QW_VERSION=n   Set Quickwit version (default: v0.8.2)"
 
 QW_VERSION ?= v0.8.2
 COMPOSE := $(shell docker compose version > /dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
@@ -92,6 +97,27 @@ search-examples:
 		-H "Content-Type: application/json" \
 		-d '{"query":"*","max_hits":0,"aggs":{"top_tags":{"terms":{"field":"tags","size":5}}}}' \
 		| python3 -c "import json,sys; d=json.load(sys.stdin); [print(f'  {b[\"key\"]}: {b[\"doc_count\"]}') for b in d.get('aggregations',{}).get('top_tags',{}).get('buckets',[])]"
+
+# Vector targets
+vector-up:
+	$(COMPOSE) up -d vector
+	@echo "Vector started. Logs: docker compose logs -f vector"
+
+create-logs-index:
+	@curl -s -XPOST http://localhost:7280/api/v1/indexes \
+		-H "Content-Type: application/yaml" \
+		--data-binary @logs-index-config.yaml
+	@echo ""
+
+vector-logs: create-logs-index
+	@echo "Starting Vector..."
+	$(COMPOSE) up -d vector
+	@echo ""
+	@echo "Waiting for logs to be ingested..."
+	@sleep 5
+	@echo ""
+	@echo "=== Search Vector logs ==="
+	@curl -s "http://localhost:7280/api/v1/logs/search?query=*" | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'Found {d[\"num_hits\"]} hits')"
 
 # Utility targets
 test:

@@ -1,0 +1,79 @@
+# Vector 配置示例
+# 将日志数据采集并转发到 Quickwit
+#
+# 使用方式:
+#   docker compose up -d
+#   docker compose exec vector vector --config /etc/vector/vector.yaml
+
+api:
+  enabled: true
+  address: "0.0.0.0:9000"
+
+sources:
+  # 示例：从目录读取 JSON 日志文件
+  demo_logs:
+    type: demo_logs
+    format: json
+    interval: 1
+
+  # 示例：从 stdin 读取（用于测试）
+  stdin:
+    type: stdin
+
+  # 示例：从文件读取真实日志
+  # file_logs:
+  #   type: file
+  #   include:
+  #     - /var/log/*.log
+  #   read_from: beginning
+
+transforms:
+  # 将日志格式转换为 Quickwit 可接受的格式
+  to_quickwit:
+    type: remap
+    inputs:
+      - demo_logs
+      - stdin
+    source: |
+      # 添加 Quickwit 需要的字段
+      .index = "logs"
+      .timestamp = now()
+      .message = .message ?? string!(.body)
+
+      # 如果是 JSON 格式日志，展开字段
+      if is_object(.message) {
+        .title = .message.title ?? .message.message ?? ""
+        .body = .message.body ?? ""
+        .level = .message.level ?? "info"
+        .service = .message.service ?? "vector"
+        .timestamp = parse_timestamp(.message.timestamp ?? now(), "%Y-%m-%dT%H:%M:%S%.3fZ") ?? now()
+      } else {
+        .title = "log"
+        .body = string!(.message)
+        .level = "info"
+        .service = "vector"
+      }
+
+sinks:
+  # 输出到 Quickwit 的 HTTP 接口
+  to_quickwit:
+    type: "http"
+    inputs:
+      - to_quickwit
+    uri: "http://quickwit:7280/api/v1/logs/ingest"
+    method: "post"
+    content_type: "application/json"
+    batch:
+      max_bytes: 1048576  # 1MB
+      timeout_secs: 5
+    healthcheck:
+      enabled: true
+      uri: "http://quickwit:7280/api/v1/version"
+
+  # 同时输出到 stdout 方便调试
+  debug:
+    type: "console"
+    inputs:
+      - to_quickwit
+    encoding:
+      codec: "json"
