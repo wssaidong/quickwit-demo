@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   quickwit:
-    image: quickwit/quickwit:${QW_VERSION:-nightly}
+    image: quickwit/quickwit:${QW_VERSION:-v0.8.2}
     container_name: quickwit-demo
     ports:
       - "7280:7280"

@@ -32,7 +32,7 @@ help:
 	@echo "Options:"
 	@echo "  QW_VERSION=n   Set Quickwit version (default: nightly)"
 
-QW_VERSION ?= nightly
+QW_VERSION ?= v0.8.2
 COMPOSE := $(shell docker compose version > /dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
 
 # Docker targets

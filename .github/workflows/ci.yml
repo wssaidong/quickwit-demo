@@ -21,7 +21,7 @@ jobs:
       - name: Start Quickwit
         run: |
           mkdir -p qwdata
-          docker compose up -d quickwit
+          QW_VERSION=v0.8.2 docker compose up -d quickwit
 
       - name: Wait for Quickwit
         run: |
@@ -33,17 +33,18 @@ jobs:
       - name: Check version
         run: docker compose exec -T quickwit quickwit --version
 
-      - name: Create index
+      - name: Download index config
         run: |
-          docker compose exec -T quickwit sh -c "
-            curl -sO https://raw.githubusercontent.com/quickwit-oss/quickwit/main/config/tutorials/stackoverflow/index-config.yaml
-            curl -s -XPOST http://localhost:7280/api/v1/indexes \
-              -H 'Content-Type: application/yaml' \
-              --data-binary @index-config.yaml
-          "
+          curl -sO https://raw.githubusercontent.com/quickwit-oss/quickwit/main/config/tutorials/stackoverflow/index-config.yaml
 
       - name: Download dataset
         run: curl -sO https://quickwit-datasets-public.s3.amazonaws.com/stackoverflow.posts.transformed-10000.json
+
+      - name: Create index
+        run: |
+          curl -s -XPOST http://localhost:7280/api/v1/indexes \
+            -H 'Content-Type: application/yaml' \
+            --data-binary @stackoverflow-index-config.yaml
 
       - name: Ingest data
         run: |
@@ -53,7 +54,6 @@ jobs:
       - name: Run search test
         run: |
           RESULT=$(curl -s "http://localhost:7280/api/v1/stackoverflow/search?query=search+AND+engine")
-          echo "Search result: $RESULT"
           echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('num_hits',0) > 0; print(f'Found {d[\"num_hits\"]} hits')"
 
       - name: Run aggregation test
@@ -75,17 +75,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Docker Compose
-        run: |
-          mkdir -p ~/.docker/cli-plugins
-          curl -SL https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-linux-x86_64 \
-            -o ~/.docker/cli-plugins/docker-compose
-          chmod +x ~/.docker/cli-plugins/docker-compose
-
       - name: Start Quickwit
         run: |
           mkdir -p qwdata
-          docker compose up -d quickwit
+          QW_VERSION=v0.8.2 docker compose up -d quickwit
 
       - name: Wait for Quickwit
         run: |
@@ -94,11 +87,18 @@ jobs:
             sleep 1
           done
 
-      - name: Run Makefile targets
+      - name: Download assets
         run: |
-          make index
-          make ingest
-          make search
+          curl -sO https://raw.githubusercontent.com/quickwit-oss/quickwit/main/config/tutorials/stackoverflow/index-config.yaml
+          curl -sO https://quickwit-datasets-public.s3.amazonaws.com/stackoverflow.posts.transformed-10000.json
+
+      - name: Run Makefile targets
+        env:
+          QW_VERSION: v0.8.2
+        run: |
+          make index QW_VERSION=v0.8.2
+          make ingest QW_VERSION=v0.8.2
+          make search QW_VERSION=v0.8.2
           make help
 
       - name: Cleanup
