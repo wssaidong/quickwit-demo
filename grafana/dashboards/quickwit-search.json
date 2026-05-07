@@ -1,0 +1,215 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity",
+        "uid": "quickwit-index"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "columns": [],
+          "data": "{\"query\":\"python\",\"max_hits\":10}",
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "parser": "json",
+          "refId": "A",
+          "root_selector": "$.num_hits",
+          "source": "url",
+          "type": "value",
+          "url": "http://quickwit:7280/api/v1/stackoverflow/search"
+        }
+      ],
+      "title": "Total Hits (python)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity",
+        "uid": "quickwit-index"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          },
+          "unit": "μs"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "columns": [],
+          "data": "{\"query\":\"python\",\"max_hits\":10}",
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "parser": "json",
+          "refId": "A",
+          "root_selector": "$.elapsed_time_micros",
+          "source": "url",
+          "type": "value",
+          "url": "http://quickwit:7280/api/v1/stackoverflow/search"
+        }
+      ],
+      "title": "Latency (μs)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity",
+        "uid": "quickwit-index"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "body" },
+            "properties": [
+              {
+                "id": "custom",
+                "value": {
+                  "align": "left",
+                  "cellOptions": { "type": "text" },
+                  "width": 400
+                }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "creationDate" },
+            "properties": [
+              {
+                "id": "custom",
+                "value": {
+                  "align": "left",
+                  "cellOptions": { "type": "text" },
+                  "width": 160
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 4 },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "columns": [
+            { "selector": "$.title", "text": "Title", "type": "string" },
+            { "selector": "$.body", "text": "Body", "type": "string" },
+            { "selector": "$.creationDate", "text": "Created", "type": "string" },
+            { "selector": "$.user", "text": "User", "type": "number" },
+            { "selector": "$.type", "text": "Type", "type": "string" }
+          ],
+          "data": "{\"query\":\"python\",\"max_hits\":50}",
+          "filters": [],
+          "format": "table",
+          "global_query_id": "",
+          "parser": "json",
+          "refId": "A",
+          "root_selector": "$.hits",
+          "source": "url",
+          "type": "table",
+          "url": "http://quickwit:7280/api/v1/stackoverflow/search"
+        }
+      ],
+      "title": "Search Results (python) — Stack Overflow",
+      "type": "table"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": ["quickwit", "search"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Quickwit Search — Stack Overflow",
+  "uid": "quickwit-search",
+  "version": 1,
+  "weekStart": ""
+}

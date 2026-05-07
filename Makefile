@@ -1,4 +1,4 @@
-.PHONY: help install start stop restart logs clean index ingest search search-examples vector-up create-logs-index vector-logs test version demo
+.PHONY: help install start stop restart logs clean index ingest search search-examples vector-up create-logs-index vector-logs grafana grafana-up test version demo
 
 # 默认目标
 help:
@@ -25,6 +25,9 @@ help:
 	@echo "  vector-up      Start Vector for log collection"
 	@echo "  create-logs-index Create the logs index for Vector data"
 	@echo "  vector-logs    Create logs index and run Vector demo"
+	@echo ""
+	@echo "Grafana targets:"
+	@echo "  grafana-up     Start Grafana with Infinity plugin for Quickwit index queries"
 	@echo ""
 	@echo "Utility targets:"
 	@echo "  test           Test API endpoint"
@@ -118,6 +121,17 @@ vector-logs: create-logs-index
 	@echo ""
 	@echo "=== Search Vector logs ==="
 	@curl -s "http://localhost:7280/api/v1/logs/search?query=*" | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'Found {d[\"num_hits\"]} hits')"
+
+# Grafana targets
+grafana-up:
+	@echo "Starting Grafana with Infinity plugin..."
+	$(COMPOSE) up -d grafana
+	@echo "Waiting for Grafana to be ready..."
+	@for i in $$(seq 1 30); do \
+		curl -sf http://localhost:3000/api/health > /dev/null 2>&1 && break || sleep 1; \
+	done
+	@echo "Grafana ready at http://localhost:3000 (admin/admin)"
+	@echo "Dashboard: http://localhost:3000/d/quickwit-search"
 
 # Utility targets
 test:
