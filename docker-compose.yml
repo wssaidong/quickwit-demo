@@ -32,22 +32,25 @@ services:
       quickwit:
         condition: service_healthy
 
-  # 可选：Grafana 用于可视化
+  # Grafana with Infinity plugin for Quickwit index queries
   grafana:
-    image: grafana/grafana:11.2.0
+    build:
+      context: .
+      dockerfile: grafana.Dockerfile
     container_name: quickwit-grafana
     ports:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_INSTALL_PLUGINS=yesoreyeram-infinity
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
-      - quickwit
+      quickwit:
+        condition: service_healthy
+    restart: unless-stopped
 
   # 可选：Prometheus 用于指标收集
   prometheus:
